@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<head>
+  <title>sample1</title>
+</head>
+<body>
+  <div id="sample1">
+    <p>ABC<strong>DEF</strong>GHIJ</p>
+    <p>1234567890</p>
+    <p>ABCDEFGHIJ</p>
+    <p>1234567890</p>
+  </div>
+  <button id="btn">get selection</button>
+  <script>
+    let containerType = ['article', 'aside', 'div', 'footer', 'header', 'main', 'section']
+    document.getElementById('btn').addEventListener('click', displaySelection)
+
+    function displaySelection () {
+      let { anchorNode, anchorOffset, focusNode, focusOffset }  = window.getSelection()
+
+      let anchorArray = []
+      let anchorParent = anchorNode.parentNode
+      anchorArray.push(Array.from(anchorParent.childNodes).indexOf(anchorNode))
+      while (!containerType.includes(anchorParent.localName)) {
+        anchorArray.unshift(Array.from(anchorParent.parentNode.childNodes).indexOf(anchorParent))
+        anchorParent = anchorParent.parentNode
+      }
+
+      let focusArray = []
+      let focusParent = focusNode.parentNode
+      focusArray.push(Array.from(focusParent.childNodes).indexOf(focusNode))
+      while (!containerType.includes(focusParent.localName)) {
+        focusArray.unshift(Array.from(focusParent.parentNode.childNodes).indexOf(focusParent))
+        focusParent = focusParent.parentNode
+      }
+
+      let anchorString = 'anchorNode: sample'
+      for (let i = 0; i < anchorArray.length; i++) {
+        anchorString += '.childNodes[' + anchorArray[i] + ']'
+      }
+
+      let focusString = 'focusNode: sample'
+      for (let j = 0; j < focusArray.length; j++) {
+        focusString += '.childNodes[' + focusArray[j] + ']'
+      }
+
+      console.log(anchorString)
+      console.log('anchorOffset: ' + anchorOffset)
+      console.log(focusString)
+      console.log('focusOffset: ' + focusOffset)
+    }
+  </script>
+</body>
