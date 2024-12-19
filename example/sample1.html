@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<head>
+  <title>example1</title>
+</head>
+<body>
+  <div id="sample1">
+    <p>ABC<strong>DEF</strong>GHIJ</p>
+    <p>1234567890</p>
+    <p>ABCDEFGHIJ</p>
+    <p>1234567890</p>
+  </div>
+  <div id="sample2">
+    <p>ABCDEFGHIJ</p>
+    <p>1234567890</p>
+    <p>ABCDEFGHIJ</p>
+    <p>1234567890</p>
+  </div>
+  <div id="sample3">
+    <h2>ABCDEFGHIJ</h2>
+    <p>123<strong>456</strong>7890</p>
+    <ul>
+      <li>abc</li>
+      <li>def<ul>
+          <li>ghi</li>
+          <li>j</li>
+        </ul>
+      </li>
+    </ul>
+    <p>ABCDEFGHIJ</p>
+    <p>1234567890</p>
+  </div>
+  <button id="btn">get output</button>
+  <script type="module">
+    import { TextCat } from '../dist/TextCat.js'
+    document.getElementById('btn').addEventListener('click', getOutput)
+    function getOutput () {
+      console.log(document.getElementById('sample3').innerHTML)
+      let tco = TextCat.create()
+      console.dir(tco)
+      let output = TextCat.html(tco)
+      console.log(output)
+    }
+  </script>
+</body>

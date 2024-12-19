@@ -1,6 +1,75 @@
-import { Attribute, BlockTagPos, Breakpoints, CaretPos, Character, CountObj, ParseOutput, TextAlign, Select, SelectionObject, Tag, TextCatObject } from './types.ts'
+export enum CaretPos {
+  Start = 'START',
+  End = 'END',
+  Middle = 'MIDDLE'
+}
 
-export default class TextCat {
+export enum TextAlign {
+  Start = 'start',
+  End = 'end',
+  Left = 'left',
+  Right = 'right',
+  Center = 'center',
+  Justify = 'justify',
+  JustifyAll = 'justify-all'
+}
+
+export type Breakpoints = number[]
+
+export interface Attribute {
+  name: string,
+  value: string
+}
+
+export interface Tag {
+  type: string,
+  attributes: Attribute[]
+}
+
+export interface Character {
+  char: string,
+  blockTags: Tag[],
+  styleTags: Tag[]
+}
+
+export interface Select {
+  start: number | null,
+  end: number | null,
+  caretPosition: CaretPos | null
+}
+
+export interface TextCatObject {
+  breakpoints: Breakpoints,
+  chars: Character[],
+  select: Select,
+  target: Element
+}
+
+export interface CountObj {
+  count: number,
+  startCount: number | null,
+  endCount: number | null
+}
+
+export interface ParseOutput {
+  breakpoints: Breakpoints,
+  chars: Character[],
+}
+
+export interface BlockTagPos {
+  start: number | null,
+  end: number | null
+}
+
+export interface SelectionObject {
+  count: number,
+  anchorNode: Node | null,
+  anchorOffset: number,
+  focusNode: Node | null,
+  focusOffset: number
+}
+
+export class TextCat {
   private static _containerTags: string[] = ['article', 'aside', 'div', 'footer', 'header', 'main', 'section']
   public static get containerTags(): string[] { return TextCat._containerTags }
   public static set containerTags(tags: string[]) { TextCat._containerTags = tags }
@@ -15,12 +84,14 @@ export default class TextCat {
     let selection = window.getSelection()
     let target: Element | null = TextCat._getEditContainer(element, selection)
     if (target === null) return null
+    TextCat._preClean(target)
+    console.log(target.innerHTML)
     let po: ParseOutput = TextCat._markupParse(target)
 
     let elementContainsSelection: boolean = false
     let select: Select = { start: null, end: null, caretPosition: null }
     if (selection !== null && target != null) {
-      elementContainsSelection = (element!.contains(selection.anchorNode))? true: false
+      elementContainsSelection = (target!.contains(selection.anchorNode))? true: false
     }
     if (elementContainsSelection || element === null && selection != null) {
      select = this._parseSelection(target, selection!, po.breakpoints)
@@ -521,6 +592,21 @@ export default class TextCat {
 
   //Private Methods//
 
+  private static _preClean(target: Element): void {
+    let innerHTML = target.innerHTML
+    let lineArray = innerHTML.split('\n')
+    let cleaned = []
+    for (let i = 0; i < lineArray.length; i++) {
+      if (lineArray[i].length > 0) {
+        cleaned.push(lineArray[i].trim())
+      }
+    }
+    cleaned.forEach((line) => console.log('line: (' + line.length + ')' + line))
+    innerHTML = cleaned.join('')
+    innerHTML = innerHTML.replace(/\s+/g, ' ')
+    target.innerHTML = innerHTML
+  }
+
   private static _getEditContainer(element: Element | null = null, selection: Selection | null): Element | null {
     if (selection === null && element === null) {
       return null
@@ -569,7 +655,7 @@ export default class TextCat {
         caretPosition = CaretPos.Middle
       }
     }
-    return { start: start, end: end, caretPosition: null}
+    return { start: start, end: end, caretPosition: caretPosition}
   }
 
   private static _selectCount(node:Node, count:number, startCount:number | null, endCount:number | null, selection:Selection): CountObj {
@@ -625,8 +711,8 @@ export default class TextCat {
     for (let i = 0; i < children.length; i++) {
       let child = children[i] as Element
       if (child.nodeType === 1) {
-        let tag = {
-          tag: child.localName,
+        let tag:Tag = {
+          type: child.localName,
           attributes: TextCat._createAttributeArray(child.attributes)
         }
         let childObj = TextCat._childParse(child, [tag], [])
@@ -651,13 +737,17 @@ export default class TextCat {
     let nested: number[] = []
     for (let k = 0; k < target.childNodes.length; k++) {
       let child = target.childNodes[k] as Element
+      console.log('NodeType: ' + child.nodeType )
       if (child.nodeType === Node.TEXT_NODE) {
         let val: string = child.nodeValue!
         count += val.length
         if (val.length > 0) {
           let chars = Array.from(val)
           let newTags = styleTags.slice() //clone
+          console.log(chars.length)
+          console.dir(blockTags)
           for (let h = 0; h < chars.length; h++) {
+            console.log(chars[h])
             charArray.push({ char: chars[h], blockTags: blockTags, styleTags: newTags })
           }
         }
@@ -667,6 +757,7 @@ export default class TextCat {
           attributes: TextCat._createAttributeArray(child.attributes)
         }
         if (TextCat.blockTags.indexOf(child.localName) === -1) {
+          console.log('-styleTag: ' + child.localName)
           let newTags = styleTags.slice()
           newTags.push(tag)
           let childObj = TextCat._childParse(child, blockTags, newTags)
@@ -674,6 +765,7 @@ export default class TextCat {
           nested = nested.concat(childObj.breakpoints.slice(1))
           charArray = charArray.concat(childObj.chars)
         } else {
+          console.log('-blockTag: ' + child.localName)
           let newTags = blockTags.slice()
           newTags.push(tag)
           let childObj = TextCat._childParse(child, newTags, styleTags)

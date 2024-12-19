@@ -1,6 +1,7 @@
 {
   "scripts": {
-    "test": "jest --watch --verbose false"
+    "test": "jest --watch --verbose false",
+    "ts": "tsc --watch"
   },
   "devDependencies": {
     "@jest/globals": "^29.7.0",

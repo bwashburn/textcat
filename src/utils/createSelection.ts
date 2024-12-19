@@ -4,19 +4,19 @@ export default function createSelection(anchorNode:Node, anchorOffset:number, fo
   Object.defineProperties(selection, {
     anchorNode: {
       value: anchorNode,
-      writable: false
+      writable: true
     },
     anchorOffset: {
       value: anchorOffset,
-      writable: false
+      writable: true
     },
     focusNode: {
       value: focusNode,
-      writable: false
+      writable: true
     },
     focusOffset: {
       value: focusOffset,
-      writable: false
+      writable: true
     }
   })
   return selection
