@@ -9,8 +9,7 @@ export declare enum TextAlign {
     Left = "left",
     Right = "right",
     Center = "center",
-    Justify = "justify",
-    JustifyAll = "justify-all"
+    Justify = "justify"
 }
 export type Breakpoints = number[];
 export interface Attribute {
@@ -49,6 +48,7 @@ export interface ParseOutput {
 export interface BlockTagPos {
     start: number | null;
     end: number | null;
+    extended: number | null;
 }
 export interface SelectionObject {
     count: number;
@@ -64,6 +64,9 @@ export declare class TextCat {
     private static _blockTags;
     static get blockTags(): string[];
     static set blockTags(tags: string[]);
+    private static _listTags;
+    static get listTags(): string[];
+    static set listTags(tags: string[]);
     private constructor();
     static create(element?: Element | null): TextCatObject | null;
     static html(tco: TextCatObject): string;
@@ -80,7 +83,6 @@ export declare class TextCat {
     static getSelectedBlockTags(tco: TextCatObject): string;
     static getSelectedStyleTags(tco: TextCatObject): string[];
     static setSelection(tco: TextCatObject): void;
-    private static _preClean;
     private static _getEditContainer;
     private static _parseSelection;
     private static _selectCount;
@@ -95,6 +97,7 @@ export declare class TextCat {
     private static _compareStyleTags;
     private static _compareBlockTags;
     private static _parseBlockLevel;
+    private static _replaceExtendedBlockTags;
     private static _replaceTopBlockTag;
     private static _insertStyleTag;
     private static _cutStyleTag;

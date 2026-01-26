@@ -1,0 +1,62 @@
+  .edit-panel{
+    background: #bbb;
+    width: 100%;
+    max-width: 792px;
+    display: flex;
+    flex-wrap: wrap;
+    position: fixed;
+    filter: drop-shadow(2px 2px 2px rgba(0,0,0,0.5));
+    border-radius: 2px;
+  }
+  .edit-panel button{
+    position: relative;
+    margin-bottom: 0;
+    cursor: pointer;
+    appearance: none;
+    outline: none;
+    background: #eeeeee;
+    color: #333333;
+    fill: #333333;
+    min-width: 30px;
+    min-height: 30px;
+    border: outset #ffffff 1px;
+  }
+  .edit-panel button:after{
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    background: radial-gradient(circle at center top, rgba(0, 0, 0, 0) 0, rgba(0, 0, 0, 0) 40%, rgba(0, 0, 0, 0.1) 150%);
+  }
+  .edit-panel button.active, .edit-panel button:hover.active{
+    background: #8888dd;
+    color: white;
+    fill: white;
+  }
+  .container{
+    margin: 4px;
+  }
+  .container label{
+    text-align: center;
+    width: 100%;
+    display: block;
+    font-size: 16px;
+  }
+  .block-tag-list, .style-tag-list, .alignment-list, .nest-list{
+    list-style-type: none;
+    display: flex;
+    margin: 0;
+    padding: 0;
+  }
+  .block-tag {
+
+  }
+  .style-tag {
+    
+  }
+  .alignment{
+
+  }
+}

@@ -1,7 +1,7 @@
 {
   "scripts": {
     "test": "jest --watch --verbose false",
-    "ts": "tsc --watch"
+    "ts": "tsc -p tsconfig.build.json --watch"
   },
   "devDependencies": {
     "@jest/globals": "^29.7.0",

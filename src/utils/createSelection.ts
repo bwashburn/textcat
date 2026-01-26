@@ -1,4 +1,4 @@
-export default function createSelection(anchorNode:Node, anchorOffset:number, focusNode:Node, focusOffset:number, originalWindow:Window): Selection | null {
+export default function createSelection(anchorNode:Node, anchorOffset:number, focusNode:Node, focusOffset:number, originalWindow:Window, direction:string = 'forward'): Selection | null {
   let selection = originalWindow.getSelection()
   selection?.removeAllRanges()
   Object.defineProperties(selection, {
@@ -17,7 +17,11 @@ export default function createSelection(anchorNode:Node, anchorOffset:number, fo
     focusOffset: {
       value: focusOffset,
       writable: true
-    }
+    },
+    direction: {
+      value: direction,
+      writable: true
+    },
   })
   return selection
 }

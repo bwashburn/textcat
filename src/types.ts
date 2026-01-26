@@ -10,8 +10,7 @@ export enum TextAlign {
   Left = 'left',
   Right = 'right',
   Center = 'center',
-  Justify = 'justify',
-  JustifyAll = 'justify-all'
+  Justify = 'justify'
 }
 
 export type Breakpoints = number[]

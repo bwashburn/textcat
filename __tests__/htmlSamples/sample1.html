@@ -1,21 +1,36 @@
 <!DOCTYPE html>
 <head>
+  <link rel="stylesheet" type="text/css" href="style.css">
   <title>sample1</title>
 </head>
 <body>
-  <div id="sample1">
+  <div class="instructions">
+    <h1>Test Page</h1>
+    <p>This page serves both as the source for JsDom within the Jest tests, and as a tool to configure the <strong>getSelection</strong> mock implementation used in the tests. This page has 4 samples to use in the testing, each with the same 40 characters split into different configurations. By selecting a portion of one of the samples and then selecting the <strong>get selection</strong> button, the needed selection properties for mocking a <strong>getSelection</strong> call will be printed to the console.</p>
+    <hr>
+  </div>
+  <br>
+  <h2>sample1</h2>
+  <div id="sample1" contenteditable="true"><p>ABC<strong>DEF</strong>GHIJ</p><p>1234567890</p><p>ABCDEFGHIJ</p><p>1234567890</p></div>
+  <br>
+  <h2>sample2</h2>
+  <div id="sample2" contenteditable="true">
     <p>ABC<strong>DEF</strong>GHIJ</p>
     <p>1234567890</p>
     <p>ABCDEFGHIJ</p>
     <p>1234567890</p>
   </div>
-  <div id="sample2">
+  <br>
+  <h2>sample3</h2>
+  <div id="sample3" contenteditable="true">
     <p>ABCDEFGHIJ</p>
     <p>1234567890</p>
     <p>ABCDEFGHIJ</p>
     <p>1234567890</p>
   </div>
-  <div id="sample3">
+  <br>
+  <h2>sample4</h2>
+  <div id="sample4" contenteditable="true">
     <h2>ABCDEFGHIJ</h2>
     <p>123<strong>456</strong>7890</p>
     <ul>
@@ -29,7 +44,24 @@
     <p>ABCDEFGHIJ</p>
     <p>1234567890</p>
   </div>
-  \\wsl.localhost\Ubuntu-22.04\home\bwashburn\contentaiq\gplx-content-iq-app\.env
+  <br>
+  <h2>sample5</h2>
+  <div id="sample5" contenteditable="true">
+    <h2>ABCDEFGHIJ</h2>
+    <p>123<strong>456</strong>7890</p>
+    <p>ABCDEFGHIJ</p>
+    <ul>
+      <li>abc</li>
+      <li>def</li>
+      <li>ghi</li>
+      <li>j</li>
+      <li>123</li>
+      <li>456</li>
+      <li>789</li>
+      <li>0</li>
+    </ul>
+  </div>
+  <br>
   <button id="btn">get selection</button>
   <script>
     let containerType = ['article', 'aside', 'div', 'footer', 'header', 'main', 'section']
@@ -63,7 +95,7 @@
       for (let j = 0; j < focusArray.length; j++) {
         focusString += '.childNodes[' + focusArray[j] + ']'
       }
-
+      console.log(anchorParent.id)
       console.log(anchorString)
       console.log('anchorOffset: ' + anchorOffset)
       console.log(focusString)

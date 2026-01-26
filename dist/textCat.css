@@ -1,0 +1,41 @@
+strong{
+    font-weight: bold;
+}
+em{
+    font-style: italic;
+}
+sup{
+    vertical-align: super;
+    font-size: 65%;
+}
+sub{
+    vertical-align: sub;
+    font-size: 65%;
+}
+s{
+    text-decoration: line-through;
+}
+u{
+    text-decoration: underline;
+}
+.text-align-start{
+    text-align: start;
+}
+.text-align-end{
+    text-align: end;
+}
+.text-align-right{
+    text-align: right;
+}
+.text-align-left{
+    text-align: left;
+}
+.text-align-center{
+    text-align: center;
+}
+.text-align-justify{
+    text-align: justify;
+}
+.text-align-justify-all{
+    text-align: justify-all;
+}

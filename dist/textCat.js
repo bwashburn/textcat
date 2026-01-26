@@ -12,31 +12,31 @@ export var TextAlign;
     TextAlign["Right"] = "right";
     TextAlign["Center"] = "center";
     TextAlign["Justify"] = "justify";
-    TextAlign["JustifyAll"] = "justify-all";
 })(TextAlign || (TextAlign = {}));
 export class TextCat {
     static _containerTags = ['article', 'aside', 'div', 'footer', 'header', 'main', 'section'];
     static get containerTags() { return TextCat._containerTags; }
     static set containerTags(tags) { TextCat._containerTags = tags; }
-    static _blockTags = ['p', 'h2', 'h3', 'h4', 'ul', 'ol', 'li'];
+    static _blockTags = ['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'ul', 'ol', 'li'];
     static get blockTags() { return TextCat._blockTags; }
     static set blockTags(tags) { TextCat._blockTags = tags; }
+    static _listTags = ['ul', 'ol'];
+    static get listTags() { return TextCat._listTags; }
+    static set listTags(tags) { TextCat._listTags = tags; }
     constructor() { }
     static create(element = null) {
         let selection = window.getSelection();
         let target = TextCat._getEditContainer(element, selection);
         if (target === null)
             return null;
-        TextCat._preClean(target);
-        console.log(target.innerHTML);
-        let po = TextCat._markupParse(target);
         let elementContainsSelection = false;
         let select = { start: null, end: null, caretPosition: null };
         if (selection !== null && target != null) {
             elementContainsSelection = (target.contains(selection.anchorNode)) ? true : false;
         }
+        let po = TextCat._markupParse(target);
         if (elementContainsSelection || element === null && selection != null) {
-            select = this._parseSelection(target, selection, po.breakpoints);
+            select = TextCat._parseSelection(target, po.breakpoints, selection);
         }
         return {
             target: target,
@@ -54,23 +54,26 @@ export class TextCat {
             let allCharTags = chars[i].blockTags.concat(chars[i].styleTags);
             let lastChar = chars[i - 1];
             let currentChar = chars[i];
-            if (i === 0) { //First Character
+            if (i === 0) {
                 markupString += TextCat._openTags(allCharTags);
                 markupString += chars[i].char;
                 lastTags = allCharTags;
             }
-            else if (i === chars.length - 1) { //Last Character
-                markupString += chars[i].char;
-                markupString += TextCat._closeTags(allCharTags);
-            }
-            else if (breakpoints.indexOf(i) > -1) { //At breakpoint
+            else if (breakpoints.indexOf(i) > -1) {
                 markupString += TextCat._closeTags(lastChar.styleTags);
                 markupString += TextCat._compareBlockTags(lastChar.blockTags, currentChar.blockTags);
                 markupString += TextCat._openTags(currentChar.styleTags);
                 markupString += chars[i].char;
+                if (i === chars.length - 1) {
+                    markupString += TextCat._closeTags(allCharTags);
+                }
                 lastTags = allCharTags;
             }
-            else { //All Other Characters
+            else if (i === chars.length - 1) {
+                markupString += chars[i].char;
+                markupString += TextCat._closeTags(allCharTags);
+            }
+            else {
                 markupString += TextCat._compareStyleTags(lastChar.styleTags, currentChar.styleTags);
                 markupString += chars[i].char;
                 lastTags = allCharTags;
@@ -79,43 +82,38 @@ export class TextCat {
         return markupString;
     }
     static insertText(newText, tco) {
-        // process selection
         let charRange = TextCat._parseBlockLevel(tco);
         let breakpointStart = tco.breakpoints.indexOf(charRange.start);
         let breakpointEnd = (tco.breakpoints.indexOf(charRange.end + 1) > -1) ? tco.breakpoints.indexOf(charRange.end + 1) : tco.breakpoints.length;
         let introTag = (tco.select.start === tco.chars.length) ? tco.chars[tco.select.start - 1] : tco.chars[tco.select.start];
         let outroTag = tco.chars[Math.max(tco.select.end - 1, 0)];
         let outroOffset = (tco.select.end >= tco.breakpoints[tco.breakpoints.length - 1]) ? tco.chars.length - tco.select.end : charRange.end - (tco.select.end - 1);
-        // process text
-        let regex1 = /•\t/g; // Word formatted bullet point
-        let regex2 = /\r\n|\r|\n/g; // Line breaks
+        let regex1 = /•\t/g;
+        let regex2 = /\r\n|\r|\n/g;
         newText = newText.replace(regex1, '');
         let newTextLineArray = newText.split(regex2);
         newText = newText.replace(regex2, '');
-        newTextLineArray = newTextLineArray.filter(item => item); // Remove empty array items
-        // Create newTextArray
+        newTextLineArray = newTextLineArray.filter(item => item);
         let newTextArray = [];
         let endLineStartPos = newText.length - newTextLineArray[newTextLineArray.length - 1].length;
         for (let i = 0; i < newText.length; i++) {
             let character = newText.charAt(i);
             if (i >= endLineStartPos && newText.length > endLineStartPos) {
                 let char = JSON.parse(JSON.stringify(outroTag));
-                char.character = character;
+                char.char = character;
                 newTextArray.push(char);
             }
             else {
                 let char = JSON.parse(JSON.stringify(introTag));
-                char.character = character;
+                char.char = character;
                 newTextArray.push(char);
             }
         }
-        //Update breakpoints
         let breakpointsInserts = [];
         let characterDelta = newText.length - (tco.select.end - tco.select.start);
-        if (newTextLineArray.length > 1) { // Multiple line insert
-            if (tco.select.start === tco.select.end) { // No text to remove
-                if (tco.select.caretPosition === CaretPos.End) { // If caret is at the end of a line
-                    // console.log('1. remove nothing from end of line add multiple lines')
+        if (newTextLineArray.length > 1) {
+            if (tco.select.start === tco.select.end) {
+                if (tco.select.caretPosition === CaretPos.End) {
                     let count = tco.select.start;
                     for (let i = 0; i < newTextLineArray.length; i++) {
                         count += newTextLineArray[i].length;
@@ -130,9 +128,9 @@ export class TextCat {
                         }
                         tco.breakpoints = tco.breakpoints.slice(0, breakpointStart + 1).concat(breakpointsInserts, tco.breakpoints.slice(breakpointEnd + 1));
                     }
+                    tco.select.caretPosition = CaretPos.End;
                 }
                 else {
-                    // console.log('2. remove nothing add multiple lines')
                     let count = tco.select.start;
                     for (let i = 0; i < newTextLineArray.length; i++) {
                         count += newTextLineArray[i].length;
@@ -153,11 +151,11 @@ export class TextCat {
                         }
                         tco.breakpoints = tco.breakpoints.slice(0, breakpointStart + 1).concat(breakpointsInserts, tco.breakpoints.slice(breakpointEnd + 1));
                     }
+                    tco.select.caretPosition = CaretPos.Middle;
                 }
             }
             else {
-                if (breakpointStart === breakpointEnd - 1) { //remove from single line
-                    // console.log('3. remove single line add multiple lines')
+                if (breakpointStart === breakpointEnd - 1) {
                     let count = tco.select.start;
                     for (let i = 0; i < newTextLineArray.length; i++) {
                         count += newTextLineArray[i].length;
@@ -178,19 +176,13 @@ export class TextCat {
                         }
                         tco.breakpoints = tco.breakpoints.slice(0, breakpointStart + 1).concat(breakpointsInserts, tco.breakpoints.slice(breakpointEnd + 1));
                     }
+                    tco.select.caretPosition = CaretPos.End;
                 }
                 else {
-                    // console.log('4. remove multiple lines add multiple lines')
                     let count = tco.select.start;
                     for (let i = 0; i < newTextLineArray.length; i++) {
                         count += newTextLineArray[i].length;
-                        if (i === newTextLineArray.length - 1) {
-                            count += outroOffset;
-                            breakpointsInserts.push(count);
-                        }
-                        else {
-                            breakpointsInserts.push(count);
-                        }
+                        breakpointsInserts.push(count);
                     }
                     if (breakpointEnd === tco.breakpoints.length) {
                         tco.breakpoints = tco.breakpoints.slice(0, breakpointStart + 1).concat(breakpointsInserts.slice(0, -1));
@@ -201,37 +193,37 @@ export class TextCat {
                         }
                         tco.breakpoints = tco.breakpoints.slice(0, breakpointStart + 1).concat(breakpointsInserts, tco.breakpoints.slice(breakpointEnd + 1));
                     }
+                    tco.select.caretPosition = CaretPos.End;
                 }
             }
         }
-        else { // Single line insert
-            if (tco.select.start === tco.select.end) { // No text to remove
-                if (tco.select.caretPosition === CaretPos.End) { // If caret is at the end of a line
-                    // console.log('5. remove nothing from end of line add single line')
+        else {
+            if (tco.select.start === tco.select.end) {
+                if (tco.select.caretPosition === CaretPos.End) {
                     for (let i = breakpointStart + 1; i < tco.breakpoints.length; i++) {
                         tco.breakpoints[i] += characterDelta;
                     }
+                    tco.select.caretPosition = CaretPos.End;
                 }
-                else { // if caret is at the beginning or middle of line
-                    // console.log('6. remove nothing add single line')
+                else {
                     if (breakpointStart + 1 < tco.breakpoints.length) {
                         for (let i = breakpointStart + 1; i < tco.breakpoints.length; i++) {
                             tco.breakpoints[i] += characterDelta;
                         }
+                        tco.select.caretPosition = CaretPos.Middle;
                     }
                 }
             }
-            else { // Text to remove
-                if (breakpointStart === breakpointEnd - 1) { //remove from single line
-                    // console.log('7. remove single line add single line')
+            else {
+                if (breakpointStart === breakpointEnd - 1) {
                     if (breakpointStart + 1 < tco.breakpoints.length) {
                         for (let i = breakpointStart + 1; i < tco.breakpoints.length; i++) {
                             tco.breakpoints[i] += characterDelta;
                         }
+                        tco.select.caretPosition = CaretPos.End;
                     }
                 }
-                else { //Remove from multiple lines
-                    // console.log('8. remove multiple lines add single line')
+                else {
                     for (let i = breakpointEnd; i < tco.breakpoints.length; i++) {
                         tco.breakpoints[i] += characterDelta;
                     }
@@ -241,74 +233,87 @@ export class TextCat {
                     else {
                         tco.breakpoints = tco.breakpoints.slice(0, breakpointStart + 1).concat(tco.breakpoints.slice(breakpointEnd));
                     }
-                    //textObj.breakpoints = textObj.breakpoints.splice(breakpointStart + 1, breakpointEnd - (breakpointStart))
+                    tco.select.caretPosition = CaretPos.End;
                 }
             }
         }
-        // console.dir(textObj.breakpoints)
-        // Update chars
         tco.chars = tco.chars.slice(0, tco.select.start).concat(newTextArray, tco.chars.slice(tco.select.end));
-        // console.dir(textObj.chars)
-        //Update selection
-        tco.select.start = tco.select.start;
+        tco.select.start = tco.select.end + characterDelta;
         tco.select.end = tco.select.end + characterDelta;
         return tco;
     }
     static changeBlockTag(newTag, tco) {
         let charRange = TextCat._parseBlockLevel(tco);
         let chars = tco.chars;
+        let newBlockTags = null;
         for (let k = charRange.start; k <= charRange.end; k++) {
-            chars[k].blockTags = TextCat._replaceTopBlockTag(newTag, chars[k].blockTags);
+            if (tco.breakpoints.indexOf(k) > -1 && k > charRange.start) {
+                newBlockTags = TextCat._replaceTopBlockTag(newTag, chars[k].blockTags, chars[k - 1].blockTags);
+            }
+            else if (tco.breakpoints.indexOf(k) > -1) {
+                newBlockTags = TextCat._replaceTopBlockTag(newTag, chars[k].blockTags, null);
+            }
+            chars[k].blockTags = newBlockTags;
+        }
+        if (charRange.extended !== null) {
+            let extendedBlockTags = null;
+            for (let l = charRange.end + 1; l < charRange.extended; l++) {
+                if (tco.breakpoints.indexOf(l) > -1 || extendedBlockTags === null) {
+                    let lastBlockTags = chars[l - 1].blockTags;
+                    extendedBlockTags = TextCat._replaceExtendedBlockTags(lastBlockTags, tco.chars[l].blockTags);
+                }
+                tco.chars[l].blockTags = extendedBlockTags;
+            }
         }
         tco.chars = chars;
         return tco;
     }
     static nestIn(tco) {
         let charRange = TextCat._parseBlockLevel(tco);
-        let chars = tco.chars;
-        let breakpoints = tco.breakpoints;
-        let replaceChars = [];
-        let newBlockTags = null;
-        for (let k = charRange.start; k < charRange.end; k++) {
-            let char = JSON.parse(JSON.stringify(chars[k]));
-            if (breakpoints.length > 1) {
-                let bpIndex = breakpoints.indexOf(k);
-                if (bpIndex > -1 && k >= breakpoints[1]) { //if breakpoint & At least second block
-                    let oldBlocks = chars[breakpoints[bpIndex - 1]].blockTags;
-                    let currentBlocks = chars[breakpoints[bpIndex]].blockTags;
-                    if (oldBlocks.length > 1 && oldBlocks.length === currentBlocks.length && oldBlocks[oldBlocks.length - 2].type === currentBlocks[currentBlocks.length - 2].type) {
-                        let listTag = this.createTag(char.blockTags[char.blockTags.length - 2].type);
-                        let liTag = this.createTag('li');
-                        char.blockTags.push(listTag);
-                        char.blockTags.push(liTag);
-                        replaceChars.push(JSON.parse(JSON.stringify(char)));
-                        newBlockTags = JSON.parse(JSON.stringify(char.blockTags));
+        let newBlockTags;
+        for (let k = charRange.start; k <= charRange.end; k++) {
+            let currentBlockTags = tco.chars[k].blockTags;
+            if (currentBlockTags.length < 2) {
+                newBlockTags = JSON.parse(JSON.stringify(currentBlockTags));
+            }
+            else if (tco.breakpoints.indexOf(k) > -1 && k > 0) {
+                let oldBlockTags = tco.chars[k - 1].blockTags;
+                let sameCount = 0;
+                let tagL = Math.min(oldBlockTags.length, currentBlockTags.length);
+                for (let i = 0; i < tagL; i++) {
+                    if (oldBlockTags[i].type === currentBlockTags[i].type) {
+                        sameCount++;
                     }
                     else {
-                        newBlockTags = null;
-                        replaceChars.push(JSON.parse(JSON.stringify(char)));
+                        break;
                     }
                 }
-                else if (newBlockTags !== null) {
-                    char.blockTags = newBlockTags;
-                    replaceChars.push(JSON.parse(JSON.stringify(char)));
+                if (sameCount < 2) {
+                    newBlockTags = JSON.parse(JSON.stringify(currentBlockTags));
+                }
+                else if (oldBlockTags.length >= currentBlockTags.length) {
+                    newBlockTags = JSON.parse(JSON.stringify(currentBlockTags));
+                    let listTag = JSON.parse(JSON.stringify(currentBlockTags.at(-2)));
+                    let li = TextCat.createTag('li');
+                    newBlockTags.push(listTag);
+                    newBlockTags.push(li);
                 }
                 else {
-                    replaceChars.push(JSON.parse(JSON.stringify(char)));
+                    newBlockTags = JSON.parse(JSON.stringify(currentBlockTags));
                 }
             }
-            else {
-                tco.chars = chars;
-                return tco;
+            else if (tco.breakpoints.indexOf(k) > -1 && k === 0) {
+                newBlockTags = JSON.parse(JSON.stringify(currentBlockTags));
             }
+            tco.chars[k].blockTags = newBlockTags;
         }
-        tco.chars = JSON.parse(JSON.stringify(chars.slice(0, charRange.start).concat(replaceChars, chars.slice(charRange.end))));
         return tco;
     }
     static nestOut(tco) {
+        tco.chars = JSON.parse(JSON.stringify(tco.chars));
         let charRange = TextCat._parseBlockLevel(tco);
         let chars = tco.chars;
-        for (let k = charRange.start; k < charRange.end; k++) {
+        for (let k = charRange.start; k <= charRange.end; k++) {
             let char = chars[k];
             if (char.blockTags.length > 3) {
                 char.blockTags.splice(char.blockTags.length - 3, 2);
@@ -441,14 +446,13 @@ export class TextCat {
     static getSelectedBlockTags(tco) {
         let charRange = TextCat._parseBlockLevel(tco);
         let chars = tco.chars;
-        let breakpoints = tco.breakpoints;
         let blockTag = (chars[charRange.start].blockTags.length > 1) ? chars[charRange.start].blockTags[chars[charRange.start].blockTags.length - 2].type : chars[charRange.start].blockTags[0].type;
         if (tco.select.caretPosition === CaretPos.End && tco.select.start > 0) {
             blockTag = (chars[tco.select.start - 1].blockTags.length > 1) ? chars[tco.select.start - 1].blockTags[chars[tco.select.start - 1].blockTags.length - 2].type : chars[tco.select.start - 1].blockTags[0].type;
             return blockTag;
         }
         for (let i = tco.select.start + 1; i < tco.select.end; i++) {
-            if (breakpoints.indexOf(i) > -1 || i === charRange.end) {
+            if (tco.breakpoints.indexOf(i) > -1 || i === charRange.end) {
                 let breakpointTag = (chars[i].blockTags.length > 1) ? chars[i].blockTags[chars[i].blockTags.length - 2].type : chars[i].blockTags[0].type;
                 if (blockTag !== breakpointTag) {
                     return 'multi';
@@ -545,27 +549,12 @@ export class TextCat {
                 so = TextCat._findSelectionProps(child, so, tco);
             }
         }
-        //set selection
         let docRange = document.createRange();
         docRange.setStart(so.anchorNode, so.anchorOffset);
         docRange.setEnd(so.focusNode, so.focusOffset);
         let selection = window.getSelection();
+        selection.removeAllRanges();
         selection.addRange(docRange);
-    }
-    //Private Methods//
-    static _preClean(target) {
-        let innerHTML = target.innerHTML;
-        let lineArray = innerHTML.split('\n');
-        let cleaned = [];
-        for (let i = 0; i < lineArray.length; i++) {
-            if (lineArray[i].length > 0) {
-                cleaned.push(lineArray[i].trim());
-            }
-        }
-        cleaned.forEach((line) => console.log('line: (' + line.length + ')' + line));
-        innerHTML = cleaned.join('');
-        innerHTML = innerHTML.replace(/\s+/g, ' ');
-        target.innerHTML = innerHTML;
     }
     static _getEditContainer(element = null, selection) {
         if (selection === null && element === null) {
@@ -583,6 +572,9 @@ export class TextCat {
             let container = selection.anchorNode.parentNode;
             while (!TextCat._containerTags.includes(container.localName)) {
                 container = container.parentNode;
+                if (container === null) {
+                    return null;
+                }
             }
             return container;
         }
@@ -590,7 +582,7 @@ export class TextCat {
             return null;
         }
     }
-    static _parseSelection(target, selection, breakpoints) {
+    static _parseSelection(target, breakpoints, selection) {
         let count = 0;
         let start = null;
         let end = null;
@@ -621,25 +613,49 @@ export class TextCat {
                 caretPosition = CaretPos.Middle;
             }
         }
+        if (end < start) {
+            let tempStart = start;
+            start = end;
+            end = tempStart;
+        }
         return { start: start, end: end, caretPosition: caretPosition };
     }
     static _selectCount(node, count, startCount, endCount, selection) {
         let myCount = count;
         let myStartCount = startCount;
         let myEndCount = endCount;
+        let myNode = node;
+        let lastTextNode = null;
         for (let k = 0; k < node.childNodes.length; k++) {
             let child = node.childNodes[k];
-            if (child.nodeType === Node.TEXT_NODE) {
+            if (child.nodeType === Node.TEXT_NODE && TextCat._listTags.indexOf(myNode.localName) === -1) {
                 if (child === selection.anchorNode) {
                     myStartCount = myCount + selection.anchorOffset;
                 }
                 if (child === selection.focusNode) {
-                    myEndCount = myCount + selection.focusOffset;
+                    if (selection.focusOffset > 0) {
+                        myEndCount = myCount + selection.focusOffset;
+                    }
+                    else {
+                        myEndCount = myCount;
+                    }
                 }
                 let val = child.nodeValue;
-                myCount += val.length;
+                if (val.indexOf('\n') === -1) {
+                    myCount += val.length;
+                }
+                else {
+                    myCount += val.indexOf('\n');
+                }
+                lastTextNode = child;
             }
             else if (child.nodeType === Node.ELEMENT_NODE) {
+                if (child === selection.focusNode) {
+                    myEndCount = myCount;
+                }
+                else if (child === selection.anchorNode) {
+                    myStartCount = myCount;
+                }
                 let countObj = TextCat._selectCount(child, myCount, myStartCount, myEndCount, selection);
                 myCount = countObj.count;
                 myStartCount = countObj.startCount;
@@ -649,18 +665,20 @@ export class TextCat {
         return { count: myCount, startCount: myStartCount, endCount: myEndCount };
     }
     static _findSelectionProps(node, so, tco) {
+        let myNode = node;
         for (let k = 0; k < node.childNodes.length; k++) {
             let child = node.childNodes[k];
-            if (child.nodeType === Node.TEXT_NODE) {
-                so.count += child.nodeValue.length;
-                if (so.count >= tco.select.start) {
+            if (child.nodeType === Node.TEXT_NODE && TextCat._listTags.indexOf(myNode.localName) === -1) {
+                let addCount = (child.nodeValue.indexOf('\n') > -1) ? child.nodeValue.indexOf('\n') : child.nodeValue.length;
+                if ((so.count + addCount) >= tco.select.start && so.anchorNode === null) {
                     so.anchorNode = child;
-                    so.anchorOffset = Math.max(so.count - tco.select.start, 0);
+                    so.anchorOffset = Math.max(tco.select.start - so.count, 0);
                 }
-                if (so.count >= tco.select.end) {
+                if ((so.count + addCount) >= tco.select.end && so.focusNode === null) {
                     so.focusNode = child;
-                    so.focusOffset = Math.max(so.count - tco.select.end, 0);
+                    so.focusOffset = Math.max(tco.select.end - so.count, 0);
                 }
+                so.count += addCount;
             }
             else if (child.nodeType === Node.ELEMENT_NODE) {
                 so = TextCat._findSelectionProps(child, so, tco);
@@ -700,17 +718,27 @@ export class TextCat {
         let nested = [];
         for (let k = 0; k < target.childNodes.length; k++) {
             let child = target.childNodes[k];
-            console.log('NodeType: ' + child.nodeType);
-            if (child.nodeType === Node.TEXT_NODE) {
+            if (child.nodeType === Node.TEXT_NODE && TextCat._listTags.indexOf(blockTags[blockTags.length - 1].type) === -1) {
                 let val = child.nodeValue;
-                count += val.length;
-                if (val.length > 0) {
-                    let chars = Array.from(val);
-                    let newTags = styleTags.slice(); //clone
-                    console.log(chars.length);
-                    console.dir(blockTags);
-                    for (let h = 0; h < chars.length; h++) {
-                        console.log(chars[h]);
+                let chars = Array.from(val);
+                let newTags = styleTags.slice();
+                let iteratelength;
+                if (blockTags[blockTags.length - 1].type === 'li') {
+                    if (chars.indexOf('\n') > -1) {
+                        count += chars.indexOf('\n');
+                        iteratelength = chars.indexOf('\n');
+                    }
+                    else {
+                        count += chars.length;
+                        iteratelength = chars.length;
+                    }
+                }
+                else {
+                    count += chars.length;
+                    iteratelength = chars.length;
+                }
+                if (chars.length > 0) {
+                    for (let h = 0; h < iteratelength; h++) {
                         charArray.push({ char: chars[h], blockTags: blockTags, styleTags: newTags });
                     }
                 }
@@ -721,7 +749,6 @@ export class TextCat {
                     attributes: TextCat._createAttributeArray(child.attributes)
                 };
                 if (TextCat.blockTags.indexOf(child.localName) === -1) {
-                    console.log('-styleTag: ' + child.localName);
                     let newTags = styleTags.slice();
                     newTags.push(tag);
                     let childObj = TextCat._childParse(child, blockTags, newTags);
@@ -730,7 +757,6 @@ export class TextCat {
                     charArray = charArray.concat(childObj.chars);
                 }
                 else {
-                    console.log('-blockTag: ' + child.localName);
                     let newTags = blockTags.slice();
                     newTags.push(tag);
                     let childObj = TextCat._childParse(child, newTags, styleTags);
@@ -780,7 +806,7 @@ export class TextCat {
     }
     static _closeTags(tags) {
         let markupString = '';
-        for (let i = tags.length - 1; i > -1; i--) { //Close tags
+        for (let i = tags.length - 1; i > -1; i--) {
             markupString += '</' + tags[i].type + '>';
         }
         return markupString;
@@ -834,7 +860,7 @@ export class TextCat {
                 break;
             }
         }
-        for (let m = returnObj.removeTags.length - 1; m > -1; m--) { //Close tags
+        for (let m = returnObj.removeTags.length - 1; m > -1; m--) {
             markupString += '</' + returnObj.removeTags[m].type + '>';
         }
         for (let n = 0; n < returnObj.addTags.length; n++) {
@@ -846,10 +872,10 @@ export class TextCat {
         let oLength = oldTags.length;
         let nLength = newTags.length;
         let lLength = Math.max(oLength, nLength);
-        let returnObj = { removeTags: [], addTags: [] };
+        let diffObj = { removeTags: [], addTags: [] };
         let markupString = '';
-        if (nLength > oLength && nLength > 2) { //nest in
-            returnObj = { removeTags: [], addTags: newTags.slice(oLength) };
+        if (nLength > oLength && nLength > 2) {
+            diffObj = { removeTags: [], addTags: newTags.slice(oLength) };
         }
         else {
             for (let i = 0; i < lLength; i++) {
@@ -858,7 +884,7 @@ export class TextCat {
                         let pos = Math.max(0, i - 1);
                         let removeTags = oldTags.slice(pos);
                         let addTags = newTags.slice(pos);
-                        returnObj = { removeTags: removeTags, addTags: addTags };
+                        diffObj = { removeTags: removeTags, addTags: addTags };
                         break;
                     }
                 }
@@ -866,22 +892,22 @@ export class TextCat {
                     let pos = Math.max(0, i - 1);
                     let removeTags = oldTags.slice(i);
                     let addTags = newTags.slice(i);
-                    returnObj = { removeTags: removeTags, addTags: addTags };
+                    diffObj = { removeTags: removeTags, addTags: addTags };
                     break;
                 }
             }
-            if (returnObj.removeTags.length === 0) {
-                returnObj.removeTags.push(oldTags[oldTags.length - 1]);
+            if (diffObj.removeTags.length === 0) {
+                diffObj.removeTags.push(oldTags[oldTags.length - 1]);
             }
-            if (returnObj.addTags.length === 0) {
-                returnObj.addTags.push(newTags[newTags.length - 1]);
+            if (diffObj.addTags.length === 0) {
+                diffObj.addTags.push(newTags[newTags.length - 1]);
             }
         }
-        for (let m = returnObj.removeTags.length - 1; m > -1; m--) { //Close tags
-            markupString += '</' + returnObj.removeTags[m].type + '>';
+        for (let m = diffObj.removeTags.length - 1; m > -1; m--) {
+            markupString += '</' + diffObj.removeTags[m].type + '>';
         }
-        for (let n = 0; n < returnObj.addTags.length; n++) {
-            markupString += TextCat._createOpeningtag(returnObj.addTags[n]);
+        for (let n = 0; n < diffObj.addTags.length; n++) {
+            markupString += TextCat._createOpeningtag(diffObj.addTags[n]);
         }
         return markupString;
     }
@@ -889,6 +915,7 @@ export class TextCat {
         let breakpoints = tco.breakpoints;
         let charsStart = null;
         let charsEnd = null;
+        let extended = null;
         for (let i = 0; i <= breakpoints.length; i++) {
             if (i === breakpoints.length) {
                 if (charsStart === null) {
@@ -926,36 +953,105 @@ export class TextCat {
                     }
                 }
             }
+            if (charsStart !== null && charsEnd !== null && charsEnd < tco.chars.length - 1 && extended === null) {
+                if (tco.chars[charsEnd].blockTags.length > 1 && breakpoints[i] > charsEnd) {
+                    if (tco.chars[breakpoints[i]].blockTags.length > 1) {
+                        if (tco.chars[breakpoints[i]].blockTags[tco.chars[breakpoints[i]].blockTags.length - 2].type === tco.chars[charsEnd].blockTags[tco.chars[charsEnd].blockTags.length - 2].type) {
+                            if (i < breakpoints.length - 1) {
+                                extended = breakpoints[i + 1];
+                            }
+                            else {
+                                extended = tco.chars.length - 1;
+                            }
+                        }
+                    }
+                }
+            }
         }
-        return { start: charsStart, end: charsEnd };
+        return { start: charsStart, end: charsEnd, extended: extended };
     }
-    static _replaceTopBlockTag(newTag, tags) {
-        let blocks = TextCat._blockTags.splice(TextCat._blockTags.indexOf('li'), 1);
-        let cloneTag = JSON.parse(JSON.stringify(newTag));
-        for (let i = tags.length - 1; i >= 0; i--) {
-            let tag = tags[i];
-            if (blocks.indexOf(tag.type) != -1) {
-                if (newTag.type === 'ul' || newTag.type === 'ol') {
-                    if (tag.type === 'ul' || tag.type === 'ol') {
-                        tags[i] = cloneTag;
-                        return tags;
-                    }
-                    else {
-                        let li = TextCat.createTag('li');
-                        tags = [cloneTag, li];
-                        return tags;
-                    }
+    static _replaceExtendedBlockTags(lastTags, currentTags) {
+        if (lastTags.length < 2) {
+            if (currentTags.length > 2) {
+                return currentTags.slice(0, 2);
+            }
+            else {
+                return currentTags;
+            }
+        }
+        else {
+            let sameCount = 0;
+            let tagL = Math.min(lastTags.length, currentTags.length);
+            for (let i = 0; i < tagL; i++) {
+                if (lastTags[i].type === currentTags[i].type) {
+                    sameCount++;
                 }
                 else {
-                    if (tag.type === 'ul' || tag.type === 'ol') {
-                        tags = [cloneTag];
-                        return tags;
+                    break;
+                }
+            }
+            if (currentTags.length > sameCount && sameCount > 1) {
+                return currentTags.slice(0, sameCount);
+            }
+            else {
+                return currentTags;
+            }
+        }
+    }
+    static _replaceTopBlockTag(newTag, tags, old) {
+        let blocks = TextCat._blockTags.slice(0, TextCat._blockTags.indexOf('li'));
+        let cloneTag = JSON.parse(JSON.stringify(newTag));
+        if (old === null) {
+            if (tags.length > 2) {
+                if (TextCat._listTags.indexOf(newTag.type) > -1) {
+                    tags.splice(-2, 1, cloneTag);
+                }
+                else {
+                    tags = [cloneTag];
+                }
+            }
+            else {
+                if (TextCat._listTags.indexOf(newTag.type) > -1) {
+                    let li = TextCat.createTag('li');
+                    tags = [cloneTag, li];
+                }
+                else {
+                    tags = [cloneTag];
+                }
+            }
+        }
+        else {
+            if (TextCat._listTags.indexOf(newTag.type) > -1) {
+                if (old.length > 1) {
+                    let sameCount = 0;
+                    let tagL = Math.min(old.length, tags.length);
+                    for (let i = 0; i < tagL; i++) {
+                        if (old[i].type === tags[i].type) {
+                            sameCount++;
+                        }
+                        else {
+                            break;
+                        }
+                    }
+                    let newTags;
+                    if (sameCount >= 2) {
+                        newTags = tags.slice(0, tags.length - 2);
                     }
                     else {
-                        tags = [cloneTag];
-                        return tags;
+                        newTags = [];
                     }
+                    let li = TextCat.createTag('li');
+                    newTags.push(cloneTag);
+                    newTags.push(li);
+                    tags = newTags;
                 }
+                else {
+                    let li = TextCat.createTag('li');
+                    tags = [cloneTag, li];
+                }
+            }
+            else {
+                tags = [cloneTag];
             }
         }
         return tags;

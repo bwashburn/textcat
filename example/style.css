@@ -1,0 +1,14 @@
+body{
+  font-size: clamp(14px, 2vw, 20px);
+  font-family: sans-serif;
+  padding: 2rem;
+  h1{
+    font-size: 150%;
+  }
+  #sample1, #sample2, #sample3, #sample4, #sample5{
+    background: #ddd;
+    padding: 0.25rem 1rem;
+    border: #999 solid 1px;
+    border-radius: 3px;
+  }
+}

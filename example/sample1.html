@@ -1,21 +1,82 @@
 <!DOCTYPE html>
 <head>
+  <link rel="stylesheet" type="text/css" href="../dist/TextCat.css">
+  <link rel="stylesheet" type="text/css" href="style.css">
+  <link rel="stylesheet" type="text/css" href="edit-panel.css">
   <title>example1</title>
 </head>
 <body>
-  <div id="sample1">
+  <div class="edit-panel">
+    <div class="container">
+      <label>Block Tags</label>
+      <ul class="block-tag-list">
+        <li><button class="block-tag p-tag">p</button></li>
+        <li><button class="block-tag h1-tag">h1</button></li>
+        <li><button class="block-tag h2-tag">h2</button></li>
+        <li><button class="block-tag h3-tag">h3</button></li>
+        <li><button class="block-tag h4-tag">h4</button></li>
+        <li><button class="block-tag h5-tag">h5</button></li>
+        <li><button class="block-tag h6-tag">h6</button></li>
+        <li><button class="block-tag ul-tag">ul</button></li>
+        <li><button class="block-tag ol-tag">ol</button></li>
+      </ul>
+    </div>
+    <div class="container">
+      <label>Nesting</label>
+      <ul class="nest-list">
+        <li><button class="nest out-nest">out</button></li>
+        <li><button class="nest in-nest">in</button></li>
+      </ul>
+    </div>
+    <div class="container">
+      <label>Style Tags</label>
+      <ul class="style-tag-list">
+        <li><button class="style-tag bold-tag">B</button></li>
+        <li><button class="style-tag italic-tag">i</button></li>
+        <li><button class="style-tag underline-tag">U</button></li>
+        <li><button class="style-tag strikethrough-tag">T</button></li>
+        <li><button class="style-tag superscript-tag">T</button></li>
+        <li><button class="style-tag subscript-tag">T</button></li>
+      </ul>
+    </div>
+    <div class="container">
+      <label>Text Alignment</label>
+      <ul class="alignment-list">
+        <li><button class="alignment start-align">start</button></li>
+        <li><button class="alignment end-align">end</button></li>
+        <li><button class="alignment left-align">left</button></li>
+        <li><button class="alignment right-align">right</button></li>
+        <li><button class="alignment center-align">center</button></li>
+        <li><button class="alignment justify-align">justify</button></li>
+      </ul>
+    </div>
+  </div>
+  <br>
+  <br>
+  <br>
+  <br>
+  <br>
+  <h2>sample1</h2>
+  <div id="sample1" contenteditable="true"><p>ABC<strong>DEF</strong>GHIJ</p><p>1234567890</p><p>ABCDEFGHIJ</p><p>1234567890</p></div>
+  <br>
+  <h2>sample2</h2>
+  <div id="sample2" contenteditable="true">
     <p>ABC<strong>DEF</strong>GHIJ</p>
     <p>1234567890</p>
     <p>ABCDEFGHIJ</p>
     <p>1234567890</p>
   </div>
-  <div id="sample2">
+  <br>
+  <h2>sample3</h2>
+  <div id="sample3" contenteditable="true">
     <p>ABCDEFGHIJ</p>
     <p>1234567890</p>
     <p>ABCDEFGHIJ</p>
     <p>1234567890</p>
   </div>
-  <div id="sample3">
+  <br>
+  <h2>sample4</h2>
+  <div id="sample4" contenteditable="true">
     <h2>ABCDEFGHIJ</h2>
     <p>123<strong>456</strong>7890</p>
     <ul>
@@ -29,16 +90,59 @@
     <p>ABCDEFGHIJ</p>
     <p>1234567890</p>
   </div>
+  <br>
+  <h2>sample5</h2>
+  <div id="sample5" contenteditable="true">
+    <h2>ABCDEFGHIJ</h2>
+    <p>123<strong>456</strong>7890</p>
+    <p>ABCDEFGHIJ</p>
+    <ul>
+      <li>abc</li>
+      <li>def</li>
+      <li>ghi</li>
+      <li>j</li>
+      <li>123</li>
+      <li>456</li>
+      <li>789</li>
+      <li>0</li>
+    </ul>
+  </div>
+  <br>
   <button id="btn">get output</button>
+  <button id="btn1">Set Selection</button>
+  <button id="btn2">Test</button>
   <script type="module">
     import { TextCat } from '../dist/TextCat.js'
+    let tco = null
     document.getElementById('btn').addEventListener('click', getOutput)
     function getOutput () {
-      console.log(document.getElementById('sample3').innerHTML)
-      let tco = TextCat.create()
+      tco = TextCat.create()
       console.dir(tco)
       let output = TextCat.html(tco)
       console.log(output)
     }
+    document.getElementById('btn1').addEventListener('click', setSelection)
+    function setSelection () {
+      if (tco !== null) {
+        tco.select.start = 13
+        tco.select.end = 16
+        TextCat.setSelection(tco)
+      }
+    }
+    document.getElementById('btn2').addEventListener('click', fireTest)
+    function fireTest () {
+      tco = TextCat.create()
+      console.log('--1--')
+      console.log(JSON.parse(JSON.stringify(tco)))
+      tco = TextCat.nestIn(tco)
+      console.log('--2--')
+      console.log(JSON.parse(JSON.stringify(tco)))
+      tco = TextCat.nestOut(tco)
+      console.log('--3--')
+      console.log(JSON.parse(JSON.stringify(tco)))
+      let output = TextCat.html(tco)
+      tco.target.innerHTML = output
+    }
   </script>
+  <script src="editPanel.js" type="module"></script>
 </body>
