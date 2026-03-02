@@ -1,6 +1,6 @@
 <h1>TextCat</h1>
 <img src="./img/textcat.svg" width="500" height="200"/>
-<p>Textcat is a utility for working with content-editable text in the browser. Native </p>
+<p>Textcat is a utility for working with content-editable text in the browser. Native functionality using <strong>window.getSelection()</strong> for getting and setting text styles gets complicated quickly as each addition changes the node tree. Textcat abstracts away the node tree, allowing easy text styling and querying. Textcat also has zero external dependencies!</p>
 
 <h2>Table of Contents</h2>
 
