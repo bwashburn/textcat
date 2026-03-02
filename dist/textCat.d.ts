@@ -71,7 +71,7 @@ export declare class TextCat {
     static create(element?: Element | null): TextCatObject | null;
     static html(tco: TextCatObject): string;
     static insertText(newText: string, tco: TextCatObject): TextCatObject;
-    static changeBlockTag(newTag: Tag, tco: TextCatObject): TextCatObject;
+    static changeBlockTag(tag: Tag, tco: TextCatObject): TextCatObject;
     static nestIn(tco: TextCatObject): TextCatObject;
     static nestOut(tco: TextCatObject): TextCatObject;
     static createTag(tag: string, attributes?: Attribute[]): Tag;
@@ -101,5 +101,4 @@ export declare class TextCat {
     private static _replaceTopBlockTag;
     private static _insertStyleTag;
     private static _cutStyleTag;
-    private static _processSpan;
 }

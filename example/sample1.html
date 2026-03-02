@@ -10,34 +10,56 @@
     <div class="container">
       <label>Block Tags</label>
       <ul class="block-tag-list">
-        <li><button class="block-tag p-tag">p</button></li>
-        <li><button class="block-tag h1-tag">h1</button></li>
-        <li><button class="block-tag h2-tag">h2</button></li>
-        <li><button class="block-tag h3-tag">h3</button></li>
-        <li><button class="block-tag h4-tag">h4</button></li>
-        <li><button class="block-tag h5-tag">h5</button></li>
-        <li><button class="block-tag h6-tag">h6</button></li>
-        <li><button class="block-tag ul-tag">ul</button></li>
-        <li><button class="block-tag ol-tag">ol</button></li>
+        <li><button class="block-tag p-tag" title="Paragraph">p</button></li>
+        <li><button class="block-tag h1-tag" title="Heading 1">h1</button></li>
+        <li><button class="block-tag h2-tag" title="Heading 2">h2</button></li>
+        <li><button class="block-tag h3-tag" title="Heading 3">h3</button></li>
+        <li><button class="block-tag h4-tag" title="Heading 4">h4</button></li>
+        <li><button class="block-tag h5-tag" title="Heading 5">h5</button></li>
+        <li><button class="block-tag h6-tag" title="Heading 6">h6</button></li>
+        <li><button class="block-tag ul-tag" title="Unordered List">ul</button></li>
+        <li><button class="block-tag ol-tag" title="Ordered List">ol</button></li>
       </ul>
     </div>
     <div class="container">
       <label>Nesting</label>
       <ul class="nest-list">
-        <li><button class="nest out-nest">out</button></li>
-        <li><button class="nest in-nest">in</button></li>
+        <li><button class="nest out-nest" title="Unnest List Item">out</button></li>
+        <li><button class="nest in-nest" title="Nest List Item">in</button></li>
       </ul>
     </div>
     <div class="container">
       <label>Style Tags</label>
       <ul class="style-tag-list">
-        <li><button class="style-tag bold-tag">B</button></li>
-        <li><button class="style-tag italic-tag">i</button></li>
-        <li><button class="style-tag underline-tag">U</button></li>
-        <li><button class="style-tag strikethrough-tag">T</button></li>
-        <li><button class="style-tag superscript-tag">T</button></li>
-        <li><button class="style-tag subscript-tag">T</button></li>
+        <li><button class="style-tag bold-tag" title="Bold">B</button></li>
+        <li><button class="style-tag italic-tag" title="Italic">i</button></li>
+        <li><button class="style-tag underline-tag" title="Underline">U</button></li>
+        <li><button class="style-tag strikethrough-tag" title="Strike through">T</button></li>
+        <li><button class="style-tag superscript-tag" title="Superscript"><span>T</span></button></li>
+        <li><button class="style-tag subscript-tag" title="Subscript"><span>T</span></button></li>
+        <li><button class="style-tag anchor-tag" title="Anchor Tag">a</button></li>
       </ul>
+      <div class="anchor-fields">
+        <textarea id="href-field" class="href-field" placeholder="href"></textarea>
+        <input id="target-field" type="text" class="target-field" placeholder="target"></input>
+      </div>
+    </div>
+    <div class="container">
+      <label for="font-select">Fonts</label>
+      <select name="font-select" id="font-select" disabled="true">
+        <option value="none"></option>
+        <option value="fonts-sansserif">Sans-Serif</option>
+        <option value="fonts-serif">Serif</option>
+      </select>
+    </div>
+    <div class="container">
+      <label for="color-select">Colors</label>
+      <select name="color-select" id="color-select" disabled="true">
+        <option value="none"></option>
+        <option value="#ff0000">Red</option>
+        <option value="#00ff00">Green</option>
+        <option value="#0000ff">Blue</option>
+      </select>
     </div>
     <div class="container">
       <label>Text Alignment</label>

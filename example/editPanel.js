@@ -6,32 +6,45 @@ let currentBlockTag
 let currentStyleTags
 // Try to create TextCatObject when selection changes
 document.addEventListener('selectionchange', selectionChanged)
-function selectionChanged () {
-    //console.log('selectionChanged')
-    let myTCO = TextCat.create()
-    if (myTCO === null) {
-        tco = null
-        textAlignment = null
-        currentBlockTag = null
-        currentStyleTags = null
-    } else if (myTCO.target.isContentEditable) {
-        tco = myTCO
-        //console.log(tco)
-        textAlignment = TextCat.getTextAlign(tco)
-        currentBlockTag = TextCat.getSelectedBlockTags(tco)
-        currentStyleTags = TextCat.getSelectedStyleTags(tco)
-    } else {
-        tco = null
-        textAlignment = null
-        currentBlockTag = null
-        currentStyleTags = null
+function selectionChanged (event) {
+    if (!anchorFieldSelected(event.target)) {
+        let myTCO = TextCat.create()
+        if (myTCO === null) {
+            tco = null
+            textAlignment = null
+            currentBlockTag = null
+            currentStyleTags = null
+        } else if (myTCO.target.isContentEditable) {
+            tco = myTCO
+            //console.log(tco)
+            textAlignment = TextCat.getTextAlign(tco)
+            currentBlockTag = TextCat.getSelectedBlockTags(tco)
+            currentStyleTags = TextCat.getSelectedStyleTags(tco)
+        } else {
+            tco = null
+            textAlignment = null
+            currentBlockTag = null
+            currentStyleTags = null
+        }
+        setActiveButtonStates(event.target)
     }
-    setActiveButtonStates()
 }
-function setActiveButtonStates () {
+
+function anchorFieldSelected (target) {
+    if (target !== document.getElementById("href-field") && target !== document.getElementById("target-field")) {
+        return false
+    } else {
+        return true
+    }
+}
+
+function setActiveButtonStates (target) {
     let blockTagButtons = document.querySelectorAll('.block-tag')
     let styleTagButtons = document.querySelectorAll('.style-tag')
     let alignmentButtons = document.querySelectorAll('.alignment')
+    if (target !== document.getElementById("href-field") && target !== document.getElementById("target-field")) {
+        document.querySelector('.anchor-fields').classList.remove('active')
+    }
 
     // Remove all active classes
     blockTagButtons.forEach((bt) => {
@@ -44,7 +57,14 @@ function setActiveButtonStates () {
         a.classList.remove('active')
     })
     if (tco === null) {
+        document.querySelector('#font-select').selectedIndex = 0
+        document.querySelector('#font-select').disabled = true
+        document.querySelector('#color-select').selectedIndex = 0
+        document.querySelector('#color-select').disabled = true
         return
+    } else {
+       document.querySelector('#font-select').disabled = false
+       document.querySelector('#color-select').disabled = false 
     }
     // Add Block-Tag Active
     switch (currentBlockTag) {
@@ -78,6 +98,8 @@ function setActiveButtonStates () {
     }
 
     // Add Style-Tag Active
+    let clearFonts = true
+    let clearColors = true
     currentStyleTags.forEach((st) => {
         switch (st) {
             case 'strong':
@@ -98,9 +120,58 @@ function setActiveButtonStates () {
             case 'sub':
                 document.querySelector('.subscript-tag').classList.add('active')
                 break
+            case 'a':
+                document.querySelector('.anchor-tag').classList.add('active')
+                document.querySelector('.anchor-fields').classList.add('active')
+                break
+        }
+        if (st.indexOf('href|') > -1) {
+            let hrefArray = st.split('|')
+            let val = (hrefArray.length > 1)? hrefArray[1]: ''
+            document.getElementById("href-field").value = val
+        }
+        if (st.indexOf('target|') > -1) {
+            let targetArray = st.split('|')
+            let val = (targetArray.length > 1)? targetArray[1]: ''
+            document.getElementById("target-field").value = val
+        }
+        if (st.indexOf('class|') > -1) {
+            let classArray = st.split('|')
+            if (classArray.length > 1) {
+
+                if (classArray[1].indexOf('fonts-') > -1) {
+                    document.querySelector('#font-select').value = classArray[1]
+                    document.querySelector('#font-select').disabled = false
+                    clearFonts = false
+                }
+                
+            }
+        }
+        if (st.indexOf('style|') > -1) {
+            let styleArray = st.split('|')
+            if (styleArray.length > 1) {
+                let propArray = styleArray[1].split(';')
+                let colorIndex = propArray.findIndex(prop => prop.indexOf('color') > -1)
+                if (colorIndex > -1) {
+                    let colorArray = propArray[colorIndex].split(':')
+                    if (colorArray.length > 1) {
+                        document.querySelector('#color-select').value = colorArray[1].trim()
+                        document.querySelector('#color-select').disabled = false
+                        clearColors = false
+                    }
+                    
+                }
+                
+            }
+            
         }
     })
-
+    if (clearFonts) {
+       document.querySelector('#font-select').selectedIndex = 0 
+    }
+    if (clearColors) {
+       document.querySelector('#color-select').selectedIndex = 0 
+    }
     // Add Alignment Active
     switch (textAlignment) {
         case 'start':
@@ -343,6 +414,74 @@ function setSUBSCRIPT () {
         let output = TextCat.html(tco)
         console.log(tco)
         console.log(output)
+        tco.target.innerHTML = output
+        TextCat.setSelection(tco)
+    }
+}
+
+document.querySelector('.anchor-tag').addEventListener('click', setANCHOR)
+function setANCHOR () {
+    if (tco !== null) {
+        let tag = TextCat.createTag('a', [{ name: 'href', value: '' }, { name: 'target', value: '' }])
+        if (currentStyleTags.indexOf('a') > -1) {
+            tco = TextCat.removeStyleTag(tag, tco)
+        } else {
+            tco = TextCat.addStyleTag(tag, tco)
+        }
+        let output = TextCat.html(tco)
+        tco.target.innerHTML = output
+        TextCat.setSelection(tco)
+    }
+}
+
+document.querySelector('#href-field').addEventListener('blur', setHref)
+function setHref () {
+    let tag = TextCat.createTag('a', [{ name: 'href', value: document.getElementById("href-field").value }, { name: 'target', value: document.getElementById("target-field").value }])
+    tco = TextCat.addStyleTag(tag, tco)
+    let output = TextCat.html(tco)
+    tco.target.innerHTML = output
+    TextCat.setSelection(tco)
+}
+
+document.querySelector('#target-field').addEventListener('blur', setTarget)
+function setTarget () {
+    let tag = TextCat.createTag('a', [{ name: 'href', value: document.getElementById("href-field").value }, { name: 'target', value: document.getElementById("target-field").value }])
+    tco = TextCat.addStyleTag(tag, tco)
+    let output = TextCat.html(tco)
+    tco.target.innerHTML = output
+    TextCat.setSelection(tco)
+}
+
+document.querySelector('#font-select').addEventListener('change', fontChange)
+function fontChange (event) {
+    if (tco !== null) {
+        if (event.target.value === 'none') {
+            let tag = TextCat.createTag('span', [{ name: 'class', value: '' }])
+            tco = TextCat.removeStyleTag(tag, tco)
+        } else {
+            let tag = TextCat.createTag('span', [{ name: 'class', value: event.target.value }])
+            tco = TextCat.addStyleTag(tag, tco)
+            document.querySelector('#font-select').disabled = false
+        }
+        let output = TextCat.html(tco)
+        tco.target.innerHTML = output
+        TextCat.setSelection(tco)
+    }
+}
+
+document.querySelector('#color-select').addEventListener('change', colorChange)
+function colorChange (event) {
+    console.log(event.target.value)
+    if (tco !== null) {
+        if (event.target.value === 'none') {
+            let tag = TextCat.createTag('span', [{ name: 'style', value: 'color:' }])
+            tco = TextCat.removeStyleTag(tag, tco)
+        } else {
+            let tag = TextCat.createTag('span', [{ name: 'style', value: 'color: ' + event.target.value }])
+            tco = TextCat.addStyleTag(tag, tco)
+            document.querySelector('#color-select').disabled = false
+        }
+        let output = TextCat.html(tco)
         tco.target.innerHTML = output
         TextCat.setSelection(tco)
     }

@@ -39,3 +39,10 @@ u{
 .text-align-justify-all{
     text-align: justify-all;
 }
+/*Fonts*/
+.fonts-sansserif{
+    font-family: sans-serif;
+}
+.fonts-serif{
+    font-family: serif;
+}

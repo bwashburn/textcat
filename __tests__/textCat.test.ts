@@ -1571,7 +1571,7 @@ describe('addStyleTag method', () => {
     getSelectionMock.mockRestore()
   })
 
-  test('Add style over selection already conataining a style', () =>{
+  test('Add style over selection already containing a style', () =>{
     let sample: HTMLElement = window.document.getElementById('sample4')!
     const getSelectionMock = jest.spyOn(window, 'getSelection').mockImplementation(() => {
       return createSelection(sample.childNodes[3].childNodes[1].childNodes[0] as Node, 0, sample.childNodes[3].childNodes[1].childNodes[0] as Node, 3, originalWindow)
@@ -1579,7 +1579,7 @@ describe('addStyleTag method', () => {
     let tco:TextCatObject = TextCat.create()!
     let tag = TextCat.createTag('em')
     tco = TextCat.addStyleTag(tag, tco)
-    expect(TextCat.html(tco)).toBe('<h2>ABCDEFGHIJ</h2><p>123<em><strong>456</strong></em>7890</p><ul><li>abc</li><li>def<ul><li>ghi</li><li>j</li></ul></li></ul><p>ABCDEFGHIJ</p><p>1234567890</p>')
+    expect(TextCat.html(tco)).toBe('<h2>ABCDEFGHIJ</h2><p>123<strong><em>456</em></strong>7890</p><ul><li>abc</li><li>def<ul><li>ghi</li><li>j</li></ul></li></ul><p>ABCDEFGHIJ</p><p>1234567890</p>')
     getSelectionMock.mockRestore()
   })
 
@@ -1591,7 +1591,7 @@ describe('addStyleTag method', () => {
     let tco:TextCatObject = TextCat.create()!
     let tag = TextCat.createTag('em')
     tco = TextCat.addStyleTag(tag, tco)
-    expect(TextCat.html(tco)).toBe('<h2>ABCDEFGHIJ</h2><p>12<em>3<strong>45</strong></em><strong>6</strong>7890</p><ul><li>abc</li><li>def<ul><li>ghi</li><li>j</li></ul></li></ul><p>ABCDEFGHIJ</p><p>1234567890</p>')
+    expect(TextCat.html(tco)).toBe('<h2>ABCDEFGHIJ</h2><p>12<em>3</em><strong><em>45</em>6</strong>7890</p><ul><li>abc</li><li>def<ul><li>ghi</li><li>j</li></ul></li></ul><p>ABCDEFGHIJ</p><p>1234567890</p>')
     getSelectionMock.mockRestore()
   })
 
@@ -1603,7 +1603,7 @@ describe('addStyleTag method', () => {
     let tco:TextCatObject = TextCat.create()!
     let tag = TextCat.createTag('em')
     tco = TextCat.addStyleTag(tag, tco)
-    expect(TextCat.html(tco)).toBe('<h2>ABCDEFGHIJ</h2><p>123<strong>45</strong><em><strong>6</strong>78</em>90</p><ul><li>abc</li><li>def<ul><li>ghi</li><li>j</li></ul></li></ul><p>ABCDEFGHIJ</p><p>1234567890</p>')
+    expect(TextCat.html(tco)).toBe('<h2>ABCDEFGHIJ</h2><p>123<strong>45<em>6</em></strong><em>78</em>90</p><ul><li>abc</li><li>def<ul><li>ghi</li><li>j</li></ul></li></ul><p>ABCDEFGHIJ</p><p>1234567890</p>')
     getSelectionMock.mockRestore()
   })
 
@@ -1686,7 +1686,7 @@ describe('removeStyleTag method', () => {
     getSelectionMock.mockRestore()
   })
 
-  test('Add style over selection already conataining a style then remove style', () =>{
+  test('Add style over selection already containing a style then remove style', () =>{
     let sample: HTMLElement = window.document.getElementById('sample4')!
     const getSelectionMock = jest.spyOn(window, 'getSelection').mockImplementation(() => {
       return createSelection(sample.childNodes[3].childNodes[1].childNodes[0] as Node, 0, sample.childNodes[3].childNodes[1].childNodes[0] as Node, 3, originalWindow)
@@ -1854,6 +1854,35 @@ describe('getSelectedStyleTags method', () => {
     tco = TextCat.addStyleTag(tag, tco)
     expect(TextCat.getSelectedStyleTags(tco)).toContain('strong')
     expect(TextCat.getSelectedStyleTags(tco)).toContain('em')
+    getSelectionMock.mockRestore()
+  })
+
+  test('Add style with class to characters holding an existing style', () =>{
+    let sample: HTMLElement = window.document.getElementById('sample4')!
+    const getSelectionMock = jest.spyOn(window, 'getSelection').mockImplementation(() => {
+      return createSelection(sample.childNodes[3].childNodes[1].childNodes[0] as Node, 0, sample.childNodes[3].childNodes[1].childNodes[0] as Node, 3, originalWindow)
+    })
+    let tco:TextCatObject = TextCat.create()!
+    let tag = TextCat.createTag('span', [{ name: 'class', value: 'font-serif' }])
+    tco = TextCat.addStyleTag(tag, tco)
+    expect(TextCat.getSelectedStyleTags(tco)).toContain('strong')
+    expect(TextCat.getSelectedStyleTags(tco)).toContain('span')
+    expect(TextCat.getSelectedStyleTags(tco)).toContain('class|font-serif')
+    getSelectionMock.mockRestore()
+  })
+
+  test('Add style with two attributes. Remove same tag with one attribute', () =>{
+    let sample: HTMLElement = window.document.getElementById('sample4')!
+    const getSelectionMock = jest.spyOn(window, 'getSelection').mockImplementation(() => {
+      return createSelection(sample.childNodes[7].childNodes[0] as Node, 3, sample.childNodes[7].childNodes[0] as Node, 6, originalWindow)
+    })
+    let tco:TextCatObject = TextCat.create()!
+    let tag = TextCat.createTag('span', [{ name: 'class', value: 'font-serif' }, { name: 'style', value: 'color:blue' }])
+    let tag2 = TextCat.createTag('span', [{ name: 'class', value: 'font-serif' }])
+    tco = TextCat.addStyleTag(tag, tco)
+    tco = TextCat.removeStyleTag(tag2, tco)
+    expect(TextCat.getSelectedStyleTags(tco)).toContain('span')
+    expect(TextCat.getSelectedStyleTags(tco)).toContain('style|color:blue')
     getSelectionMock.mockRestore()
   })
 })

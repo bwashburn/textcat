@@ -148,9 +148,9 @@ export class TextCat {
     let outroTag = tco.chars[Math.max(tco.select.end! - 1, 0)]
     let outroOffset = (tco.select.end! >= tco.breakpoints[ tco.breakpoints.length - 1])? tco.chars.length - tco.select.end! : charRange.end! - (tco.select.end! - 1)    
     // process text
-    let regex1 = /•\t/g // Word formatted bullet point
+    //let regex1 = /•\t/g // Word formatted bullet point
     let regex2 = /\r\n|\r|\n/g // Line breaks
-    newText = newText.replace(regex1, '')
+    //newText = newText.replace(regex1, '')
     let newTextLineArray = newText.split(regex2)
     newText = newText.replace(regex2, '')
     newTextLineArray = newTextLineArray.filter(item => item) // Remove empty array items
@@ -294,15 +294,15 @@ export class TextCat {
     return tco
   }
 
-  public static changeBlockTag(newTag: Tag, tco: TextCatObject): TextCatObject {
+  public static changeBlockTag(tag: Tag, tco: TextCatObject): TextCatObject {
     let charRange = TextCat._parseBlockLevel(tco)
     let chars = tco.chars
     let newBlockTags = null
     for (let k = charRange.start!; k <= charRange.end!; k++) {
       if (tco.breakpoints.indexOf(k) > -1 && k > charRange.start!) {
-        newBlockTags = TextCat._replaceTopBlockTag(newTag, chars[k].blockTags, chars[k - 1].blockTags)
+        newBlockTags = TextCat._replaceTopBlockTag(tag, chars[k].blockTags, chars[k - 1].blockTags)
       } else if (tco.breakpoints.indexOf(k) > -1) {
-        newBlockTags = TextCat._replaceTopBlockTag(newTag, chars[k].blockTags, null)
+        newBlockTags = TextCat._replaceTopBlockTag(tag, chars[k].blockTags, null)
       }
       chars[k].blockTags = newBlockTags as Tag[]
     }
@@ -518,47 +518,30 @@ export class TextCat {
       for (let i = tco.select.start!; i < tco.select.end!; i++) {
         let char = chars[i]
         for (let j = 0; j < char.styleTags.length; j++) {
+          let styleTag = char.styleTags[j]
           if (i === tco.select.start) {
-            if (char.styleTags[j].type === 'span') {
-              let types = TextCat._processSpan(char.styleTags[j])
-              for (let k = 0; k < types.length; k++) {
-                tagArray.push({ tag: types[k], count: 1 })
+            tagArray.push({ tag: styleTag.type, count: 1 })
+            if (styleTag.attributes.length > 0) {
+              for (let k = 0; k < styleTag.attributes.length; k++) {
+                 tagArray.push({ tag: styleTag.attributes[k].name + '|' + styleTag.attributes[k].value, count: 1 })
               }
-            } else if (char.styleTags[j].type === 'a') {
-              let href = char.styleTags[j].attributes.filter((attr) => attr.name === 'href')
-              let target = char.styleTags[j].attributes.filter((attr) => attr.name === 'target')
-              let anchorName = 'a-' + href[0].value + ';' + target[0].value
-              tagArray.push({ tag: anchorName, count: 1 })
-            } else {
-              tagArray.push({ tag: char.styleTags[j].type, count: 1 })
             }
           } else {
-            if (char.styleTags[j].type === 'span') {
-              let types = TextCat._processSpan(char.styleTags[j])
-              for (let k = 0; k < types.length; k++) {
-                let pos = tagArray.map(e => e.tag).indexOf(types[k])
-                if (pos > -1) {
-                  tagArray[pos].count++
-                } else {
-                  tagArray.push({ tag: types[k], count: 1 })
-                }
-              }
-            } else if (char.styleTags[j].type === 'a') {
-              let href = char.styleTags[j].attributes.filter((attr) => attr.name === 'href')
-              let target = char.styleTags[j].attributes.filter((attr) => attr.name === 'target')
-              let anchorName = 'a-' + href[0].value + ';' + target[0].value
-              let pos = tagArray.map(e => e.tag).indexOf(anchorName)
-              if (pos > -1) {
-                tagArray[pos].count++
-              } else {
-                tagArray.push({ tag: anchorName, count: 1 })
-              }
+            let tagPos = tagArray.map(e => e.tag).indexOf(styleTag.type)
+            if (tagPos > -1) {
+              tagArray[tagPos].count++
             } else {
-              let pos = tagArray.map(e => e.tag).indexOf(char.styleTags[j].type)
-              if (pos > -1) {
-                tagArray[pos].count++
-              } else {
-                tagArray.push({ tag: char.styleTags[j].type, count: 1 })
+              tagArray.push({ tag: styleTag.type, count: 1 })
+            }
+            if (styleTag.attributes.length > 0) {
+              for (let k = 0; k < styleTag.attributes.length; k++) {
+                let attributeName = styleTag.attributes[k].name + '|' + styleTag.attributes[k].value
+                let attributePos = tagArray.map(e => e.tag).indexOf(attributeName)
+                if (attributePos > -1) {
+                  tagArray[attributePos].count++
+                } else {
+                  tagArray.push({ tag: attributeName, count: 1 })
+                }
               }
             }
           }
@@ -1082,79 +1065,54 @@ export class TextCat {
   }
 
   private static _insertStyleTag (newTag: Tag, styleTags: Tag[]): Tag[] {
-    if (newTag.type === 'span') {
-      if (styleTags.length > 0 && styleTags[0].type === 'span') {
-        let index = styleTags[0].attributes.findIndex(item => item.name === newTag.attributes[0].name)
-        if (index > -1) {
-          styleTags[0].attributes[index] = newTag.attributes[0]
-        } else {
-          styleTags[0].attributes.push(newTag.attributes[0])
+    let shift = 0
+    let subIndex = styleTags.findIndex(item => item.type === 'sub')
+    let supIndex = styleTags.findIndex(item => item.type === 'sup')
+    let tagIndex = styleTags.findIndex(item => item.type === newTag.type)
+    if (tagIndex > -1) { //tag already exists
+      if (newTag.attributes.length > 0) {
+        for (let i = 0; i < newTag.attributes.length; i++) {
+          let attr = newTag.attributes[i]
+          let attrIndex = styleTags[tagIndex].attributes.findIndex(item => item.name === attr.name)
+          if (attrIndex > -1) {
+            styleTags[tagIndex].attributes[attrIndex] = { name: attr.name, value: attr.value }
+          } else {
+            styleTags[tagIndex].attributes.push({ name: attr.name, value: attr.value })
+          }
         }
-      } else {
-        styleTags.splice(0, 0, newTag)
       }
     } else {
-      let subIndex = styleTags.findIndex(item => item.type === 'sub')
-      let supIndex = styleTags.findIndex(item => item.type === 'sup')
-      let aIndex = styleTags.findIndex(item => item.type === 'a')
-      let newTagIndex = styleTags.findIndex(item => item.type === newTag.type)
-      if (newTagIndex === -1) {
-        if (newTag.type === 'sup' && subIndex > -1) {
-          styleTags[subIndex].type = 'sup'
-        } else if (newTag.type === 'sub' && supIndex > -1) {
-          styleTags[supIndex].type = 'sub'
-        } else {
-          styleTags.splice(styleTags.length - 1, 0, newTag)
-        }
-      } else if (newTag.type === 'a' && aIndex > -1) {
-        styleTags[aIndex].attributes = newTag.attributes
+      if (newTag.type === 'span') {
+        styleTags.unshift(newTag)
+        shift++
+      } else {
+        styleTags.push(newTag)
       }
+    }
+    if (newTag.type === 'sup' && subIndex > -1) {
+      styleTags.splice(subIndex + shift, 1)
+    } else if (newTag.type === 'sub' && supIndex > -1) {
+      styleTags.splice(supIndex + shift, 1)
     }
     return styleTags
   }
 
   private static _cutStyleTag (newTag: Tag, styleTags: Tag[]): Tag[] {
-    let index = styleTags.findIndex(item => item.type === newTag.type)
-    if (newTag.type === 'span') {
-      if (styleTags[0].type === 'span') {
-        if (index > -1) {
-          for (let i = 0; i < newTag.attributes.length; i++) {
-            let attr = newTag.attributes[i]
-            let removeIndex = styleTags[0].attributes.findIndex(item => item.name === attr.name)
-            if (removeIndex > -1) {
-              styleTags[0].attributes.splice(removeIndex, 1)
-            }
+    let tagIndex = styleTags.findIndex(item => item.type === newTag.type)
+    if (tagIndex > -1) {
+      if (newTag.attributes.length > 0) {
+        for (let i = 0; i < newTag.attributes.length; i++) {
+          let attr = newTag.attributes[i]
+          let attIndex = styleTags[tagIndex].attributes.findIndex(item => item.name === attr.name)
+          if (attIndex > -1) {
+            styleTags[tagIndex].attributes.splice(attIndex, 1)
           }
-          if (styleTags[0].attributes.length === 0) {
-            styleTags.splice(0, 1)
-          }
-        } 
-      } else {
-        styleTags.splice(index, 1)
+        }
       }
-    } else {
-      styleTags.splice(index, 1)
+      if (styleTags[tagIndex].attributes.length === 0) {
+        styleTags.splice(tagIndex, 1)
+      }
     }
     return styleTags
-  }
-
-  private static _processSpan (tag: Tag): string[] {
-    let type: string[] = []
-    for (let i = 0; i < tag.attributes.length; i++) {
-      let attr = tag.attributes[i].name
-      if (attr === 'style') {
-        if (tag.attributes[i].value.indexOf('color') > -1) {
-          const regex = /color:\s*(?<color>[^;]*)(;*)/
-          let valArray = tag.attributes[i].value.match(regex)
-          type.push('color-' + valArray!.groups!.color)
-        }
-      } else if (attr === 'class') {
-        if (tag.attributes[i].value.indexOf('font-') > -1)
-        type.push(tag.attributes[i].value)
-      } else if (attr === 'inline') {
-        type.push('inline')
-      }
-    }
-    return type
   }
 }
