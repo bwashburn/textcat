@@ -621,6 +621,9 @@ export class TextCat {
         end = countObj.endCount
       }
     }
+    if (start === null) {
+      start = end
+    }
     if (start === end) {
       if (breakpoints.indexOf(start!) > -1) {
         if (selection.anchorOffset === 0) {

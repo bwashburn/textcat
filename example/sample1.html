@@ -166,5 +166,30 @@
       tco.target.innerHTML = output
     }
   </script>
+  <script>
+    function listBreakoutFix (e) {
+      if (e.key === 'Enter') {
+        let selection = window.getSelection()
+        if (selection.focusNode.parentElement.localName == 'ul' || selection.focusNode.parentElement.localName == 'ol') {
+          e.preventDefault()
+          let list = selection.focusNode.parentElement
+          list.lastElementChild.remove()
+          let newBlock = document.createElement('p')
+          newBlock.innerHTML = '<br>'
+          list.after(newBlock)
+          let newRange = document.createRange();
+          newRange.setStart(newBlock, 0);
+          newRange.collapse(true);
+          selection.removeAllRanges();
+          selection.addRange(newRange);
+        }
+      }
+    }
+    document.getElementById('sample1').addEventListener('keydown', listBreakoutFix)
+    document.getElementById('sample2').addEventListener('keydown', listBreakoutFix)
+    document.getElementById('sample3').addEventListener('keydown', listBreakoutFix)
+    document.getElementById('sample4').addEventListener('keydown', listBreakoutFix)
+    document.getElementById('sample5').addEventListener('keydown', listBreakoutFix)
+  </script>
   <script src="editPanel.js" type="module"></script>
 </body>

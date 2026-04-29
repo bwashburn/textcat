@@ -492,9 +492,9 @@ document.querySelector('.start-align').addEventListener('click', setSTART)
 function setSTART () {
     if (tco !== null) {
         if (textAlignment === 'start') {
-            this.textObj = TextCat.removeTextAlign(tco)
+            tco = TextCat.removeTextAlign(tco)
         } else {
-            this.textObj = TextCat.addTextAlign('start', tco)
+            tco = TextCat.addTextAlign('start', tco)
         }
         let output = TextCat.html(tco)
         console.log(tco)
@@ -508,9 +508,9 @@ document.querySelector('.end-align').addEventListener('click', setEND)
 function setEND () {
     if (tco !== null) {
         if (textAlignment === 'end') {
-            this.textObj = TextCat.removeTextAlign(tco)
+            tco = TextCat.removeTextAlign(tco)
         } else {
-            this.textObj = TextCat.addTextAlign('end', tco)
+            tco = TextCat.addTextAlign('end', tco)
         }
         let output = TextCat.html(tco)
         console.log(tco)
@@ -524,9 +524,9 @@ document.querySelector('.left-align').addEventListener('click', setLEFT)
 function setLEFT () {
     if (tco !== null) {
         if (textAlignment === 'left') {
-            this.textObj = TextCat.removeTextAlign(tco)
+            tco = TextCat.removeTextAlign(tco)
         } else {
-            this.textObj = TextCat.addTextAlign('left', tco)
+            tco = TextCat.addTextAlign('left', tco)
         }
         let output = TextCat.html(tco)
         console.log(tco)
@@ -540,9 +540,9 @@ document.querySelector('.right-align').addEventListener('click', setRIGHT)
 function setRIGHT () {
     if (tco !== null) {
         if (textAlignment === 'right') {
-            this.textObj = TextCat.removeTextAlign(tco)
+            tco = TextCat.removeTextAlign(tco)
         } else {
-            this.textObj = TextCat.addTextAlign('right', tco)
+            tco = TextCat.addTextAlign('right', tco)
         }
         let output = TextCat.html(tco)
         console.log(tco)
@@ -556,9 +556,9 @@ document.querySelector('.center-align').addEventListener('click', setCENTER)
 function setCENTER () {
     if (tco !== null) {
         if (textAlignment === 'center') {
-            this.textObj = TextCat.removeTextAlign(tco)
+            tco = TextCat.removeTextAlign(tco)
         } else {
-            this.textObj = TextCat.addTextAlign('center', tco)
+            tco = TextCat.addTextAlign('center', tco)
         }
         let output = TextCat.html(tco)
         console.log(tco)
@@ -572,9 +572,9 @@ document.querySelector('.justify-align').addEventListener('click', setJUSTIFY)
 function setJUSTIFY () {
     if (tco !== null) {
         if (textAlignment === 'justify') {
-            this.textObj = TextCat.removeTextAlign(tco)
+            tco = TextCat.removeTextAlign(tco)
         } else {
-            this.textObj = TextCat.addTextAlign('justify', tco)
+            tco = TextCat.addTextAlign('justify', tco)
         }
         let output = TextCat.html(tco)
         console.log(tco)
